@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "407922493562",
+    "firebase_url": "https://encrypted-messenger-app-54316.firebaseio.com",
+    "project_id": "encrypted-messenger-app-54316",
+    "storage_bucket": "encrypted-messenger-app-54316.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407922493562:android:d0ec6a85626985d9",
+        "android_client_info": {
+          "package_name": "com.example.android.encryptedmessengerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "407922493562-4pc6dfjcjo1bkcv2roa7fjs1pns1ec29.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.encryptedmessengerapp",
+            "certificate_hash": "e1084107322f9b758b199b9c71728815e08ace95"
+          }
+        },
+        {
+          "client_id": "407922493562-hgo82tlj0pv7i9dlakc8hlmvevci2rp7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDusZgQ6xkrSyjgH0ykHu7SiJ4irdTZd7I"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "407922493562-hgo82tlj0pv7i9dlakc8hlmvevci2rp7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
