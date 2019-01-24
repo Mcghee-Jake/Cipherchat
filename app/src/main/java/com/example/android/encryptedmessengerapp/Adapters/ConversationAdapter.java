@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.android.encryptedmessengerapp.Objects.Conversation;
-import com.example.android.encryptedmessengerapp.Objects.Message;
 import com.example.android.encryptedmessengerapp.R;
 
 import java.util.ArrayList;
@@ -31,7 +30,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
     @NonNull
     @Override
     public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.conversation_list_item, viewGroup, false);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chat_list_item, viewGroup, false);
         return new ConversationAdapter.ConversationViewHolder(view);
     }
 

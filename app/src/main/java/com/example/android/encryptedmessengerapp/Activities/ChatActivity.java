@@ -3,10 +3,12 @@ package com.example.android.encryptedmessengerapp.Activities;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -27,16 +29,32 @@ public class ChatActivity extends AppCompatActivity {
     private ChildEventListener childEventListener;
     private String chatPartner;
     private String chatID;
+    private  EditText etMessage;
+    private ImageButton btnSend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.chat_activity);
+
+        etMessage = findViewById(R.id.et_message);
+        btnSend = findViewById(R.id.btn_send);
 
         if (!chatInitialized) { // If this is a new conversation
-            getActionBar().setCustomView(R.layout.new_chat_actionbar);
-            final EditText etRecipient = findViewById(R.id.et_recipient);
-            ImageButton confirmRecipient = findViewById(R.id.btn_confirm_recipient);
+
+            etMessage.setVisibility(View.GONE);
+            btnSend.setVisibility(View.GONE);
+
+            ViewGroup actionBarLayout = (ViewGroup) getLayoutInflater().inflate(
+                    R.layout.new_chat_actionbar,
+                    null);
+            ActionBar actionBar = getSupportActionBar();
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setDisplayShowCustomEnabled(true);
+            actionBar.setCustomView(actionBarLayout);
+
+            final EditText etRecipient = actionBarLayout.findViewById(R.id.et_recipient);
+            ImageButton confirmRecipient = actionBarLayout.findViewById(R.id.btn_confirm_recipient);
             confirmRecipient.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -52,20 +70,29 @@ public class ChatActivity extends AppCompatActivity {
                     FirebaseDatabase.getInstance().getReference().child("chatRooms").child(username).child(chatID).setValue(true);
                     FirebaseDatabase.getInstance().getReference().child("chatRooms").child(chatPartner).child(chatID).setValue(true);
 
-                    chatInitialized = true;
+                    setUpChat();
                 }
             });
-        } else { // Chat has been initialized
-            getActionBar().setDisplayShowCustomEnabled(false);
-            getActionBar().setTitle(chatPartner);
+        } else setUpChat(); // Chat has been initialized
 
+    }
+
+    private void setUpChat(){
+
+            ActionBar actionBar = getSupportActionBar();
+            actionBar.setDisplayShowCustomEnabled(false);
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setTitle(chatPartner);
+
+
+            etMessage.setVisibility(View.VISIBLE);
+            btnSend.setVisibility(View.VISIBLE);
 
             setupRecyclerView();
 
             final DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference().child("chats").child(chatID);
 
-            final EditText etMessage = findViewById(R.id.et_message);
-            ImageButton btnSend = findViewById(R.id.btn_send);
+
             btnSend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -91,12 +118,8 @@ public class ChatActivity extends AppCompatActivity {
                 public void onCancelled(@NonNull DatabaseError databaseError) {}
             };
             firebaseDatabase.addChildEventListener(childEventListener);
-
-        }
-
-
-
     }
+
 
     private void setupRecyclerView(){
         RecyclerView recyclerView = findViewById(R.id.rv_messages);

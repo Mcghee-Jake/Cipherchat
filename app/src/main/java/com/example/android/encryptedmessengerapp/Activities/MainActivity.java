@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView(){
-        RecyclerView recyclerView = findViewById(R.id.rv_messages);
+        RecyclerView recyclerView = findViewById(R.id.rv_conversations);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
