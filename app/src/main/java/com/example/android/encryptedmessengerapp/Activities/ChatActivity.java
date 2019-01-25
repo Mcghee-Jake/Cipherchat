@@ -63,12 +63,13 @@ public class ChatActivity extends AppCompatActivity {
                     if (chatPartner.compareTo(username) < 0) chatID = chatPartner + "_" + username;
                     else chatID = username + "_" + chatPartner;
 
-                    // Add the chat to the database
-                    FirebaseDatabase.getInstance().getReference().child("chats");
+                    // Add the users to userChats
+                    FirebaseDatabase.getInstance().getReference().child("userChats").child(username).child(chatID).setValue(true);
+                    FirebaseDatabase.getInstance().getReference().child("userChats").child(chatPartner).child(chatID).setValue(true);
 
-                    // Add the users to the chat rooms
-                    FirebaseDatabase.getInstance().getReference().child("chatRooms").child(username).child(chatID).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("chatRooms").child(chatPartner).child(chatID).setValue(true);
+                    // Add the users to chatInfo
+                    FirebaseDatabase.getInstance().getReference().child("chatInfo").child(chatID).child("members").child(username).setValue(true);
+                    FirebaseDatabase.getInstance().getReference().child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
 
                     setUpChat();
                 }
@@ -90,7 +91,7 @@ public class ChatActivity extends AppCompatActivity {
 
             setupRecyclerView();
 
-            final DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference().child("chats").child(chatID);
+            final DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference().child("chatMessages").child(chatID);
 
 
             btnSend.setOnClickListener(new View.OnClickListener() {
