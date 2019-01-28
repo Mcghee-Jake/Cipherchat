@@ -4,11 +4,11 @@ public class Message {
 
     private String message;
     private String sender;
-    private String receiver;
 
     public Message() {} // Required for firebase serialization
 
-    public Message(String message) {
+    public Message(String sender, String message) {
+        this.sender = sender;
         this.message = message;
     }
 
@@ -28,11 +28,4 @@ public class Message {
         this.sender = sender;
     }
 
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(String receiver) {
-        this.receiver = receiver;
-    }
 }

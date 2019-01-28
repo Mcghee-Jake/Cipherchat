@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import com.example.android.encryptedmessengerapp.Adapters.MessageAdapter;
 import com.example.android.encryptedmessengerapp.Objects.Message;
 import com.example.android.encryptedmessengerapp.R;
+import com.example.android.encryptedmessengerapp.Utils;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -23,14 +24,14 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private String username = "USERNAME";
+    private String username = "User1";
+    private String chatID;
     private boolean chatInitialized = false;
     private MessageAdapter messageAdapter;
-    private ChildEventListener childEventListener;
     private String chatPartner;
-    private String chatID;
-    private  EditText etMessage;
+    private EditText etMessage;
     private ImageButton btnSend;
+    private DatabaseReference firebaseDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,8 @@ public class ChatActivity extends AppCompatActivity {
 
         etMessage = findViewById(R.id.et_message);
         btnSend = findViewById(R.id.btn_send);
+
+        firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
         if (!chatInitialized) { // If this is a new conversation
 
@@ -58,18 +61,18 @@ public class ChatActivity extends AppCompatActivity {
             confirmRecipient.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Create a chatID in the form of  [lowerUserName_higherUserName]
                     chatPartner = etRecipient.getText().toString();
-                    if (chatPartner.compareTo(username) < 0) chatID = chatPartner + "_" + username;
-                    else chatID = username + "_" + chatPartner;
+                    chatID = Utils.getChatRoomID(username, chatPartner);
 
                     // Add the users to userChats
-                    FirebaseDatabase.getInstance().getReference().child("userChats").child(username).child(chatID).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("userChats").child(chatPartner).child(chatID).setValue(true);
+                    firebaseDatabase.child("userChats").child(username).child(chatPartner).setValue(true);
+                    firebaseDatabase.child("userChats").child(chatPartner).child(username).setValue(true);
+
+
 
                     // Add the users to chatInfo
-                    FirebaseDatabase.getInstance().getReference().child("chatInfo").child(chatID).child("members").child(username).setValue(true);
-                    FirebaseDatabase.getInstance().getReference().child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
+                    firebaseDatabase.child("chatInfo").child(chatID).child("members").child(username).setValue(true);
+                    firebaseDatabase.child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
 
                     setUpChat();
                 }
@@ -91,34 +94,39 @@ public class ChatActivity extends AppCompatActivity {
 
             setupRecyclerView();
 
-            final DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference().child("chatMessages").child(chatID);
-
-
             btnSend.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Message message = new Message(etMessage.getText().toString());
-                    firebaseDatabase.push().setValue(message);
+                    Message message = new Message(username, etMessage.getText().toString());
+                    firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
+                    firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
                     etMessage.setText("");
                 }
             });
 
-            childEventListener = new ChildEventListener() {
+            firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     Message message = dataSnapshot.getValue(Message.class);
                     messageAdapter.add(message);
                 }
+
                 @Override
-                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                }
+
                 @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                }
+
                 @Override
-                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                }
+
                 @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {}
-            };
-            firebaseDatabase.addChildEventListener(childEventListener);
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
     }
 
 
