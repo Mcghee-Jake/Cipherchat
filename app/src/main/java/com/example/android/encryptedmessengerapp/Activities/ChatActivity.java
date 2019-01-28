@@ -43,92 +43,81 @@ public class ChatActivity extends AppCompatActivity {
 
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
-        if (!chatInitialized) { // If this is a new conversation
+        if (!chatInitialized) startNewChat();// If this is a new conversation
+        else setUpChat(); // Chat has been initialized
+    }
 
-            etMessage.setVisibility(View.GONE);
-            btnSend.setVisibility(View.GONE);
-
-            ViewGroup actionBarLayout = (ViewGroup) getLayoutInflater().inflate(
-                    R.layout.new_chat_actionbar,
-                    null);
-            ActionBar actionBar = getSupportActionBar();
-            actionBar.setDisplayShowTitleEnabled(false);
-            actionBar.setDisplayShowCustomEnabled(true);
-            actionBar.setCustomView(actionBarLayout);
-
-            final EditText etRecipient = actionBarLayout.findViewById(R.id.et_recipient);
-            ImageButton confirmRecipient = actionBarLayout.findViewById(R.id.btn_confirm_recipient);
-            confirmRecipient.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    chatPartner = etRecipient.getText().toString();
-                    chatID = Utils.getChatRoomID(username, chatPartner);
-
-                    // Add the users to userChats
-                    firebaseDatabase.child("userChats").child(username).child(chatPartner).setValue(true);
-                    firebaseDatabase.child("userChats").child(chatPartner).child(username).setValue(true);
-
-
-
-                    // Add the users to chatInfo
-                    firebaseDatabase.child("chatInfo").child(chatID).child("members").child(username).setValue(true);
-                    firebaseDatabase.child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
-
-                    setUpChat();
-                }
-            });
-        } else setUpChat(); // Chat has been initialized
-
+    private void startNewChat() {
+        newChatActionBar();
+        hideMessaging();
     }
 
     private void setUpChat(){
-
-            ActionBar actionBar = getSupportActionBar();
-            actionBar.setDisplayShowCustomEnabled(false);
-            actionBar.setDisplayShowTitleEnabled(true);
-            actionBar.setTitle(chatPartner);
-
-
-            etMessage.setVisibility(View.VISIBLE);
-            btnSend.setVisibility(View.VISIBLE);
-
+            initializedChatActionBar();
+            showMessaging();
             setupRecyclerView();
-
-            btnSend.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Message message = new Message(username, etMessage.getText().toString());
-                    firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
-                    firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
-                    etMessage.setText("");
-                }
-            });
-
-            firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
-                @Override
-                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Message message = dataSnapshot.getValue(Message.class);
-                    messageAdapter.add(message);
-                }
-
-                @Override
-                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                }
-
-                @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                }
-
-                @Override
-                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                }
-            });
+            setupDatabaseListener();
     }
 
+    private void newChatActionBar() {
+        ViewGroup actionBarLayout = (ViewGroup) getLayoutInflater().inflate(
+                R.layout.new_chat_actionbar,
+                null);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setCustomView(actionBarLayout);
+
+        final EditText etRecipient = actionBarLayout.findViewById(R.id.et_recipient);
+        ImageButton confirmRecipient = actionBarLayout.findViewById(R.id.btn_confirm_recipient);
+        confirmRecipient.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chatPartner = etRecipient.getText().toString();
+                chatID = Utils.getChatRoomID(username, chatPartner);
+
+                // Add the users to userChats
+                firebaseDatabase.child("userChats").child(username).child(chatPartner).setValue(true);
+                firebaseDatabase.child("userChats").child(chatPartner).child(username).setValue(true);
+
+
+
+                // Add the users to chatInfo
+                firebaseDatabase.child("chatInfo").child(chatID).child("members").child(username).setValue(true);
+                firebaseDatabase.child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
+
+                // Initialize the chat
+                setUpChat();
+            }
+        });
+    }
+
+    private void initializedChatActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowCustomEnabled(false);
+        actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setTitle(chatPartner);
+    }
+
+    private void hideMessaging(){
+        etMessage.setVisibility(View.GONE);
+        btnSend.setVisibility(View.GONE);
+    }
+
+    private void showMessaging(){
+        etMessage.setVisibility(View.VISIBLE);
+        btnSend.setVisibility(View.VISIBLE);
+
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Message message = new Message(username, etMessage.getText().toString());
+                firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
+                firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
+                etMessage.setText("");
+            }
+        });
+    }
 
     private void setupRecyclerView(){
         RecyclerView recyclerView = findViewById(R.id.rv_messages);
@@ -137,6 +126,24 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         messageAdapter = new MessageAdapter();
         recyclerView.setAdapter(messageAdapter);
+    }
+
+    private void setupDatabaseListener(){
+        firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Message message = dataSnapshot.getValue(Message.class);
+                messageAdapter.add(message);
+            }
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
     }
 
 }

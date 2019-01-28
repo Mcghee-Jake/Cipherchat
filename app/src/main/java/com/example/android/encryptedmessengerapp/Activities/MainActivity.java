@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private String username = "User1";
     private ChatRoomAdapter chatRoomAdapter;
     private DatabaseReference firebaseDatabase;
-    private List<String> chatPreviews;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,46 +35,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         setupRecyclerView();
+        setupFloatingActionButton();
+        setupDatabase();
 
-        FloatingActionButton fabStartConversation = findViewById(R.id.fab_start_conversation);
-        fabStartConversation.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                startActivity(intent);
-            }
-        });
-
-
-        firebaseDatabase = FirebaseDatabase.getInstance().getReference();
-        firebaseDatabase.child("userChats").child(username).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
-                if (chatMap != null) {
-                    final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
-                    for (String chatPartner : chatPartners) {
-                        String chatRoomID = Utils.getChatRoomID(username, chatPartner);
-                        firebaseDatabase.child("chatInfo").child(chatRoomID).child("lastMessage").addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                List<String> messagePreviews = List<String>) dataSnapshot.getValue();
-                                    chatRoomAdapter.update(chatPartners, chatPreviews);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
     }
 
     private void setupRecyclerView(){
@@ -84,6 +47,48 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         chatRoomAdapter = new ChatRoomAdapter();
         recyclerView.setAdapter(chatRoomAdapter);
+    }
+
+    private void setupFloatingActionButton() {
+        FloatingActionButton fabStartConversation = findViewById(R.id.fab_start_conversation);
+        fabStartConversation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void setupDatabase() {
+        firebaseDatabase = FirebaseDatabase.getInstance().getReference();
+        firebaseDatabase.child("userChats").child(username).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
+                if (chatMap != null) {
+                    final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
+                    final List<String> chatPreviews = new ArrayList<>();
+                    for (String chatPartner : chatPartners) {
+                        String chatRoomID = Utils.getChatRoomID(username, chatPartner);
+                        firebaseDatabase.child("chatInfo").child(chatRoomID).child("lastMessage").addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                String lastMessage = (String) dataSnapshot.getValue();
+                                chatPreviews.add(lastMessage);
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {}
+                        });
+                    }
+                    if (chatPartners.size() == chatPreviews.size()) chatRoomAdapter.update(chatPartners, chatPreviews);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
     }
 
 }
