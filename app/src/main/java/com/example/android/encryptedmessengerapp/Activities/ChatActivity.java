@@ -3,10 +3,12 @@ package com.example.android.encryptedmessengerapp.Activities;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -32,6 +34,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText etMessage;
     private ImageButton btnSend;
     private DatabaseReference firebaseDatabase;
+    private ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +43,9 @@ public class ChatActivity extends AppCompatActivity {
 
         etMessage = findViewById(R.id.et_message);
         btnSend = findViewById(R.id.btn_send);
+
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
@@ -63,7 +69,6 @@ public class ChatActivity extends AppCompatActivity {
         ViewGroup actionBarLayout = (ViewGroup) getLayoutInflater().inflate(
                 R.layout.new_chat_actionbar,
                 null);
-        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setCustomView(actionBarLayout);
@@ -93,7 +98,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initializedChatActionBar() {
-        ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowCustomEnabled(false);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(chatPartner);
