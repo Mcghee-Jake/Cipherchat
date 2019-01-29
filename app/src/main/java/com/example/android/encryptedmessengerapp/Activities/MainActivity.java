@@ -12,6 +12,9 @@ import android.view.View;
 import com.example.android.encryptedmessengerapp.Adapters.ChatRoomAdapter;
 import com.example.android.encryptedmessengerapp.R;
 import com.example.android.encryptedmessengerapp.Utils;
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -19,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,16 +31,59 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
     private String username = "User1";
     private ChatRoomAdapter chatRoomAdapter;
     private DatabaseReference firebaseDatabase;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseAuth.AuthStateListener authStateListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        authorizeUser();
         setupRecyclerView();
         setupFloatingActionButton();
         setupDatabase();
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (authStateListener != null) { firebaseAuth.removeAuthStateListener(authStateListener);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        firebaseAuth.addAuthStateListener(authStateListener);
+    }
+
+    private void authorizeUser(){
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                // Check if user is logged in
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    username = user.getDisplayName();
+                } else {
+                    // User is not signed in
+                    username = null;
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(Arrays.asList(
+                                            new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                            new AuthUI.IdpConfig.EmailBuilder().build()))
+                                    .build(),
+                            Utils.RC_SIGN_IN);
+                }
+            }
+        };
     }
 
     private void setupRecyclerView(){
