@@ -128,7 +128,7 @@ public class ChatActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
-        messageAdapter = new MessageAdapter();
+        messageAdapter = new MessageAdapter(username);
         recyclerView.setAdapter(messageAdapter);
     }
 
