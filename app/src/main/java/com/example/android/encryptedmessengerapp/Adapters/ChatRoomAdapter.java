@@ -17,20 +17,26 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
     List<String> chatPartners = new ArrayList<>();
     List<String> chatPreviews = new ArrayList<>();
 
-    public ChatRoomAdapter() {
+    private ChatInfoClickListener chatInfoClickListener;
 
+    public ChatRoomAdapter(ChatInfoClickListener chatInfoClickListener) {
+        this.chatInfoClickListener = chatInfoClickListener;
     }
 
-    public void update(List<String> chatPartners, List<String> chatPreviews) {
-        this.chatPartners = chatPartners;
-        this.chatPreviews = chatPreviews;
+    public interface ChatInfoClickListener {
+        void onChatInfoClicked(String chatPartner);
+    }
+
+    public void update(String chatPartner, String chatPreview) {
+        this.chatPartners.add(chatPartner);
+        this.chatPreviews.add(chatPreview);
         notifyDataSetChanged();
     }
 
     @NonNull
     @Override
     public ChatRoomViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chat_list_item, viewGroup, false);
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.chat_info_list_item, viewGroup, false);
         return new ChatRoomViewHolder(view);
     }
 
@@ -45,7 +51,7 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
         return chatPartners.size();
     }
 
-    public class ChatRoomViewHolder extends RecyclerView.ViewHolder {
+    public class ChatRoomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView chatPartner, chatPreview;
 
@@ -53,8 +59,14 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
             super(itemView);
             chatPartner = itemView.findViewById(R.id.tv_chat_partner);
             chatPreview = itemView.findViewById(R.id.tv_chat_preview);
+            itemView.setOnClickListener(this);
+
         }
 
+        @Override
+        public void onClick(View view) {
+            chatInfoClickListener.onChatInfoClicked(chatPartners.get(getAdapterPosition()));
+        }
     }
 
 }

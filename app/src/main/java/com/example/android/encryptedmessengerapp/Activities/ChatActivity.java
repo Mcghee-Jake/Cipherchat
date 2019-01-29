@@ -3,12 +3,10 @@ package com.example.android.encryptedmessengerapp.Activities;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -49,7 +47,9 @@ public class ChatActivity extends AppCompatActivity {
 
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
-        if (!chatInitialized) startNewChat();// If this is a new conversation
+        chatPartner = getIntent().getStringExtra("CHAT_PARTNER");
+
+        if (chatPartner == null) startNewChat();// If this is a new conversation
         else setUpChat(); // Chat has been initialized
     }
 
@@ -84,12 +84,6 @@ public class ChatActivity extends AppCompatActivity {
                 // Add the users to userChats
                 firebaseDatabase.child("userChats").child(username).child(chatPartner).setValue(true);
                 firebaseDatabase.child("userChats").child(chatPartner).child(username).setValue(true);
-
-
-
-                // Add the users to chatInfo
-                firebaseDatabase.child("chatInfo").child(chatID).child("members").child(username).setValue(true);
-                firebaseDatabase.child("chatInfo").child(chatID).child("members").child(chatPartner).setValue(true);
 
                 // Initialize the chat
                 setUpChat();
@@ -133,6 +127,8 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setupDatabaseListener(){
+        chatID = Utils.getChatRoomID(username, chatPartner);
+
         firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {

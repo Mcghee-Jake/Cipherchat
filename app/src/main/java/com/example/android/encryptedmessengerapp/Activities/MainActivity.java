@@ -22,12 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.ChatInfoClickListener {
 
     private String username = "User1";
     private ChatRoomAdapter chatRoomAdapter;
     private DatabaseReference firebaseDatabase;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupRecyclerView(){
         RecyclerView recyclerView = findViewById(R.id.rv_conversations);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
-        chatRoomAdapter = new ChatRoomAdapter();
+        chatRoomAdapter = new ChatRoomAdapter(this);
         recyclerView.setAdapter(chatRoomAdapter);
     }
 
@@ -68,21 +66,20 @@ public class MainActivity extends AppCompatActivity {
                 HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
                 if (chatMap != null) {
                     final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
-                    final List<String> chatPreviews = new ArrayList<>();
-                    for (String chatPartner : chatPartners) {
-                        String chatRoomID = Utils.getChatRoomID(username, chatPartner);
+                    for (int i = 0; i < chatPartners.size(); i++) {
+                        final String chatPartner = chatPartners.get(i);
+                        final String chatRoomID = Utils.getChatRoomID(username, chatPartner);
                         firebaseDatabase.child("chatInfo").child(chatRoomID).child("lastMessage").addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                String lastMessage = (String) dataSnapshot.getValue();
-                                chatPreviews.add(lastMessage);
+                            @Override                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                String lastMessage = dataSnapshot.getValue(String.class);
+                                chatRoomAdapter.update(chatPartner, lastMessage);
                             }
 
                             @Override
                             public void onCancelled(@NonNull DatabaseError databaseError) {}
                         });
                     }
-                    if (chatPartners.size() == chatPreviews.size()) chatRoomAdapter.update(chatPartners, chatPreviews);
+
                 }
             }
 
@@ -91,4 +88,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onChatInfoClicked(String chatPartner) {
+        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        intent.putExtra("CHAT_PARTNER", chatPartner);
+        startActivity(intent);
+    }
 }
