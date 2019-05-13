@@ -3,12 +3,13 @@ package com.example.android.encryptedmessengerapp.Activities;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -24,15 +25,13 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private String username = "User1";
+    private String username;
     private String chatID;
-    private boolean chatInitialized = false;
     private MessageAdapter messageAdapter;
     private String chatPartner;
     private EditText etMessage;
     private ImageButton btnSend;
     private DatabaseReference firebaseDatabase;
-    private ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +41,9 @@ public class ChatActivity extends AppCompatActivity {
         etMessage = findViewById(R.id.et_message);
         btnSend = findViewById(R.id.btn_send);
 
-        actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
+        username = getIntent().getStringExtra("USERNAME");
         chatPartner = getIntent().getStringExtra("CHAT_PARTNER");
 
         if (chatPartner == null) startNewChat();// If this is a new conversation
@@ -59,22 +56,23 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void setUpChat(){
-            initializedChatActionBar();
-            showMessaging();
-            setupRecyclerView();
-            setupDatabaseListener();
+        initializedChatActionBar();
+        setupDatabaseListener();
+        showMessaging();
+        setupRecyclerView();
     }
 
     private void newChatActionBar() {
-        ViewGroup actionBarLayout = (ViewGroup) getLayoutInflater().inflate(
-                R.layout.new_chat_actionbar,
-                null);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setCustomView(actionBarLayout);
 
-        final EditText etRecipient = actionBarLayout.findViewById(R.id.et_recipient);
-        ImageButton confirmRecipient = actionBarLayout.findViewById(R.id.btn_confirm_recipient);
+        findViewById(R.id.toolbar_chat_activity_initiated).setVisibility(View.GONE);
+        findViewById(R.id.toolbar_chat_activity_new).setVisibility(View.VISIBLE);
+
+        setSupportActionBar((Toolbar)findViewById(R.id.toolbar_chat_activity_new));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        final EditText etRecipient = findViewById(R.id.et_recipient);
+        ImageButton confirmRecipient = findViewById(R.id.btn_confirm_recipient);
         confirmRecipient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,9 +90,14 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void initializedChatActionBar() {
-        actionBar.setDisplayShowCustomEnabled(false);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setTitle(chatPartner);
+        findViewById(R.id.toolbar_chat_activity_new).setVisibility(View.GONE);
+        findViewById(R.id.toolbar_chat_activity_initiated).setVisibility(View.VISIBLE);
+
+        setSupportActionBar((Toolbar)findViewById(R.id.toolbar_chat_activity_initiated));
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle(chatPartner);
     }
 
     private void hideMessaging(){
@@ -105,6 +108,25 @@ public class ChatActivity extends AppCompatActivity {
     private void showMessaging(){
         etMessage.setVisibility(View.VISIBLE);
         btnSend.setVisibility(View.VISIBLE);
+
+        etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (etMessage.getText().toString().equals("")) {
+                    btnSend.setEnabled(false);
+                    btnSend.setImageResource(R.drawable.ic_send_grey_24dp);
+                } else {
+                    btnSend.setEnabled(true);
+                    btnSend.setImageResource(R.drawable.ic_send_accent_24dp);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
 
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override

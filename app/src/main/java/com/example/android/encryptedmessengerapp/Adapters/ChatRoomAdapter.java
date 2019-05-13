@@ -27,6 +27,11 @@ public class ChatRoomAdapter extends RecyclerView.Adapter<ChatRoomAdapter.ChatRo
         void onChatInfoClicked(String chatPartner);
     }
 
+    public void clear() {
+        this.chatPartners = new ArrayList<>();
+        this.chatPreviews = new ArrayList<>();
+    }
+
     public void update(String chatPartner, String chatPreview) {
         this.chatPartners.add(chatPartner);
         this.chatPreviews.add(chatPreview);

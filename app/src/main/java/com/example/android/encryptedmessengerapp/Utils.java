@@ -2,8 +2,6 @@ package com.example.android.encryptedmessengerapp;
 
 public class Utils {
 
-    public static final int RC_SIGN_IN = 1;
-
     /**
      * Create a chatID in the form of  [lowerUserName_higherUserName]
      *
