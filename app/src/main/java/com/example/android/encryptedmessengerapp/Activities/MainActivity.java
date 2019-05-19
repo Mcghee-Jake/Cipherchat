@@ -10,8 +10,10 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
-import com.example.android.encryptedmessengerapp.Adapters.ChatRoomAdapter;
+import com.example.android.encryptedmessengerapp.Adapters.chatRoomRecyclerViewAdapter;
+import com.example.android.encryptedmessengerapp.Objects.ChatPreview;
 import com.example.android.encryptedmessengerapp.R;
+import com.example.android.encryptedmessengerapp.Utils;
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,17 +23,21 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.ChatInfoClickListener {
+public class MainActivity extends AppCompatActivity implements chatRoomRecyclerViewAdapter.ChatInfoClickListener {
 
     private final int RC_SIGN_IN = 1;
     private String user_id;
-    private ChatRoomAdapter chatRoomAdapter;
+    private chatRoomRecyclerViewAdapter chatRoomRecyclerViewAdapter;
     private DatabaseReference firebaseDatabase;
     private FirebaseAuth firebaseAuth;
     private FirebaseAuth.AuthStateListener authStateListener;
-    private ValueEventListener valueEventListener;
+    private ValueEventListener chatPartnersValueEventListener;
+    private List<ValueEventListener> activeChatsValueEventListeners;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,14 +52,27 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
     @Override
     protected void onPause() {
         super.onPause();
-        if (authStateListener != null) { firebaseAuth.removeAuthStateListener(authStateListener);
+
+        // Clear the authStateListener
+        if (authStateListener != null) { firebaseAuth.removeAuthStateListener(authStateListener); }
+
+        // Clear the value event listeners
+        if (chatPartnersValueEventListener != null) {
+            firebaseDatabase.removeEventListener(chatPartnersValueEventListener);
+            chatPartnersValueEventListener = null;
         }
-        chatRoomAdapter.clear();
-        if (valueEventListener != null) {
-            firebaseDatabase.removeEventListener(valueEventListener);
-            valueEventListener = null;
+        if (activeChatsValueEventListeners != null) {
+            for (ValueEventListener valueEventListener : activeChatsValueEventListeners) {
+                firebaseDatabase.removeEventListener(valueEventListener);
+            }
+            activeChatsValueEventListeners = null;
         }
+
+
+        // Clear the recyclerView
+        chatRoomRecyclerViewAdapter.clear();
     }
+
 
     @Override
     protected void onResume() {
@@ -70,14 +89,12 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 // Check if user is logged in
                 FirebaseUser user = firebaseAuth.getCurrentUser();
-                if (user != null) {
-                    // User is signed in
-                    user_id = user.getUid();
-                    setupDatabase();
-
-                } else {
-                    // User is not signed in
+                if (user != null) { // If user is signed in
+                    user_id = user.getUid(); // Get user ID
+                    setupDatabase(); // Retrieve the date for that user
+                } else { // If user is not signed in
                     user_id = null;
+                    // Activate firebase login page
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
@@ -96,8 +113,8 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
         RecyclerView recyclerView = findViewById(R.id.rv_conversations);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        chatRoomAdapter = new ChatRoomAdapter(this);
-        recyclerView.setAdapter(chatRoomAdapter);
+        chatRoomRecyclerViewAdapter = new chatRoomRecyclerViewAdapter(this);
+        recyclerView.setAdapter(chatRoomRecyclerViewAdapter);
     }
 
     private void setupFloatingActionButton() {
@@ -115,36 +132,34 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
     private void setupDatabase() {
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
-        if (valueEventListener == null) {
-            valueEventListener = new ValueEventListener() {
+        if (chatPartnersValueEventListener == null) {
+            chatPartnersValueEventListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    // For each chat partner
-                    Log.i("info", "key; " + dataSnapshot.getKey() + " - value: " + dataSnapshot.getValue());
-                /*
-                if (chatMap != null) {
-                    final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
-                    for (int i = 0; i < chatPartners.size(); i++) {
-                        final String chatPartner = chatPartners.get(i);
-
-                        final String chatRoomID = Utils.getChatRoomID(user_id, chatPartner);
-                        Log.i("Chat Room ID: ", chatRoomID);
-                        if (valueEventListener == null) {
-                            valueEventListener = new ValueEventListener() {
+                    // Retrieve the list of people that the current user has active chats with
+                    HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
+                    if (chatMap != null) { // If the current user has active chats
+                        final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
+                        activeChatsValueEventListeners = new ArrayList<>();
+                        for (int i = 0; i < chatPartners.size(); i++) { // For each chat partner
+                            final String chatPartner = chatPartners.get(i);
+                            final String chatRoomID = Utils.getChatRoomID(user_id, chatPartner); // Get the id of the chat room
+                            Log.i("Chat Room ID: ", chatRoomID);
+                            ValueEventListener valueEventListener = new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    String lastMessage = dataSnapshot.getValue(String.class);
-                                    chatRoomAdapter.update(chatPartner, lastMessage);
+                                    String lastMessage = dataSnapshot.getValue(String.class); // Retrieve the last message in the conversation
+                                    ChatPreview chatPreview = new ChatPreview(chatPartner, lastMessage);
+                                    chatRoomRecyclerViewAdapter.update(chatPreview); // Display the chat info in the recyclerView
                                 }
-
                                 @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {}
+                                public void onCancelled(@NonNull DatabaseError databaseError) { }
                             };
+                            activeChatsValueEventListeners.add(valueEventListener);
                             firebaseDatabase.child("chatInfo").child(chatRoomID).child("lastMessage").addListenerForSingleValueEvent(valueEventListener);
                         }
                     }
-                }
-                */
+
                 }
 
                 @Override
@@ -152,14 +167,14 @@ public class MainActivity extends AppCompatActivity implements ChatRoomAdapter.C
             };
         }
 
-        firebaseDatabase.child("userChats").child(user_id).addValueEventListener(valueEventListener);
+        firebaseDatabase.child("userChats").child(user_id).addValueEventListener(chatPartnersValueEventListener);
     }
 
     @Override
-    public void onChatInfoClicked(String chatPartner) {
+    public void onChatInfoClicked(ChatPreview chatPreview) {
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
         intent.putExtra("USERNAME", user_id);
-        intent.putExtra("CHAT_PARTNER", chatPartner);
+        intent.putExtra("CHAT_PARTNER", chatPreview.getChatPartner());
         startActivity(intent);
     }
 }
