@@ -22,13 +22,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class ChatActivity extends AppCompatActivity {
 
     private String username;
     private String chatID;
     private MessageAdapter messageAdapter;
-    private String chatPartner;
+    private String chatPartnerEmail;
+    private String chatPartnerID;
     private EditText etMessage;
     private ImageButton btnSend;
     private DatabaseReference firebaseDatabase;
@@ -44,9 +46,9 @@ public class ChatActivity extends AppCompatActivity {
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
         username = getIntent().getStringExtra("USERNAME");
-        chatPartner = getIntent().getStringExtra("CHAT_PARTNER");
+        chatPartnerEmail = getIntent().getStringExtra("CHAT_PARTNER_EMAIL");
 
-        if (chatPartner == null) startNewChat();// If this is a new conversation
+        if (chatPartnerEmail == null) startNewChat();// If this is a new conversation
         else setUpChat(); // Chat has been initialized
     }
 
@@ -57,7 +59,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setUpChat(){
         initializedChatActionBar();
-        setupDatabaseListener();
+        setupDatabaseListeners();
         showMessaging();
         setupRecyclerView();
     }
@@ -76,18 +78,14 @@ public class ChatActivity extends AppCompatActivity {
         confirmRecipient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                chatPartner = etRecipient.getText().toString();
-                chatID = Utils.getChatRoomID(username, chatPartner);
-
-                // Add the users to userChats
-                firebaseDatabase.child("userChats").child(username).child(chatPartner).setValue(true);
-                firebaseDatabase.child("userChats").child(chatPartner).child(username).setValue(true);
+                chatPartnerEmail = etRecipient.getText().toString().trim();
 
                 // Initialize the chat
                 setUpChat();
             }
         });
     }
+
 
     private void initializedChatActionBar() {
         findViewById(R.id.toolbar_chat_activity_new).setVisibility(View.GONE);
@@ -97,7 +95,7 @@ public class ChatActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(true);
-        getSupportActionBar().setTitle(chatPartner);
+        getSupportActionBar().setTitle(chatPartnerEmail);
     }
 
     private void hideMessaging(){
@@ -131,10 +129,28 @@ public class ChatActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Message message = new Message(username, etMessage.getText().toString());
-                firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
-                firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
-                etMessage.setText("");
+                String recipientEmailInput = etMessage.getText().toString().toLowerCase().trim();
+                if (!recipientEmailInput.isEmpty()) { // If there is a valid string in the message field
+                    // Send the message through firebase
+                    Message message = new Message(username, recipientEmailInput);
+                    firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
+                    firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
+                    etMessage.setText("");
+
+                    // Add chat partner info to firebase database if this is the first message between the users
+                    firebaseDatabase.child("userChats").child(username).child(chatPartnerID).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.getValue() == null) {
+                                // Add the users to userChats
+                                firebaseDatabase.child("userChats").child(username).child(chatPartnerID).setValue(true);
+                                firebaseDatabase.child("userChats").child(chatPartnerID).child(username).setValue(true);
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) { }
+                    });
+                }
             }
         });
     }
@@ -148,24 +164,40 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView.setAdapter(messageAdapter);
     }
 
-    private void setupDatabaseListener(){
-        chatID = Utils.getChatRoomID(username, chatPartner);
 
-        firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
+    private void setupDatabaseListeners(){
+
+        firebaseDatabase.child("users").orderByChild("email").equalTo(chatPartnerEmail).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Message message = dataSnapshot.getValue(Message.class);
-                messageAdapter.add(message);
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot != null) {
+                    chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
+                    chatID = Utils.getChatRoomID(username, chatPartnerID);
+
+                    firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                            Message message = dataSnapshot.getValue(Message.class);
+                            messageAdapter.add(message);
+                        }
+                        @Override
+                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {}
+                    });
+                }
             }
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
+
+
     }
+
+
 
 }

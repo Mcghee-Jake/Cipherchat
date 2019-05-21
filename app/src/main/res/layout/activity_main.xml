@@ -25,6 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:src="@drawable/ic_chat_white_24dp"
-        android:layout_margin="16dp" />
+        android:layout_margin="16dp"
+        android:background="@color/colorAccent"/>
 
 </FrameLayout>
