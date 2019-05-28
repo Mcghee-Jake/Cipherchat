@@ -3,6 +3,7 @@ package com.example.android.encryptedmessengerapp.Activities;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -78,10 +79,26 @@ public class ChatActivity extends AppCompatActivity {
         confirmRecipient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                chatPartnerEmail = etRecipient.getText().toString().trim();
+                chatPartnerEmail = etRecipient.getText().toString().toLowerCase().trim();
 
-                // Initialize the chat
-                setUpChat();
+                // Check to make sure that the chat partner is a registered user
+                firebaseDatabase.child("users").orderByChild("email").equalTo(chatPartnerEmail).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.getValue() != null) setUpChat(); // If they are registered, set up the chat
+                        else { // If they are not registered, show an error message
+                            AlertDialog.Builder builder = new AlertDialog.Builder(ChatActivity.this);
+                            builder.setMessage("No user found with this e-mail address")
+                                    .setCancelable(true)
+                                    .setTitle("Error")
+                                    .setNeutralButton("OK", null);
+                            AlertDialog alert = builder.create();
+                            alert.show();
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) { }
+                });
             }
         });
     }
@@ -118,7 +135,7 @@ public class ChatActivity extends AppCompatActivity {
                     btnSend.setImageResource(R.drawable.ic_send_grey_24dp);
                 } else {
                     btnSend.setEnabled(true);
-                    btnSend.setImageResource(R.drawable.ic_send_accent_24dp);
+                    btnSend.setImageResource(R.drawable.ic_send_white_24dp);
                 }
             }
 
@@ -129,10 +146,10 @@ public class ChatActivity extends AppCompatActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String recipientEmailInput = etMessage.getText().toString().toLowerCase().trim();
-                if (!recipientEmailInput.isEmpty()) { // If there is a valid string in the message field
+                String messageString = etMessage.getText().toString().trim();
+                if (!messageString.isEmpty()) { // If there is a valid string in the message field
                     // Send the message through firebase
-                    Message message = new Message(username, recipientEmailInput);
+                    Message message = new Message(username, messageString);
                     firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
                     firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
                     etMessage.setText("");
@@ -170,7 +187,7 @@ public class ChatActivity extends AppCompatActivity {
         firebaseDatabase.child("users").orderByChild("email").equalTo(chatPartnerEmail).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot != null) {
+                if (dataSnapshot.getValue() != null) {
                     chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
                     chatID = Utils.getChatRoomID(username, chatPartnerID);
 

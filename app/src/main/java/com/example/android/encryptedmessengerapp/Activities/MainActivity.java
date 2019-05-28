@@ -7,6 +7,9 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.example.android.encryptedmessengerapp.Adapters.chatRoomRecyclerViewAdapter;
@@ -14,6 +17,8 @@ import com.example.android.encryptedmessengerapp.Objects.ChatPreview;
 import com.example.android.encryptedmessengerapp.R;
 import com.example.android.encryptedmessengerapp.Utils;
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -43,10 +48,12 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initializeToolbar();
         authorizeUser();
         setupRecyclerView();
         setupFloatingActionButton();
     }
+
 
     @Override
     protected void onPause() {
@@ -55,6 +62,10 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         // Clear the authStateListener
         if (authStateListener != null) { firebaseAuth.removeAuthStateListener(authStateListener); }
 
+        clearData();
+    }
+
+    private void clearData() {
         // Clear the value event listeners
         if (chatPartnersValueEventListener != null) {
             firebaseDatabase.removeEventListener(chatPartnersValueEventListener);
@@ -77,6 +88,32 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
     protected void onResume() {
         super.onResume();
         firebaseAuth.addAuthStateListener(authStateListener);
+    }
+
+    private void initializeToolbar() {
+        setSupportActionBar((Toolbar)findViewById(R.id.toolbar_main_activity));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main_activity, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.btn_logout) {
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            clearData();
+                        }
+                    });
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void authorizeUser() {
@@ -144,11 +181,15 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         });
     }
 
+
     private void getChatRoomData() {
         if (chatPartnersValueEventListener == null) {
             chatPartnersValueEventListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    // Hide the progress bar
+                    findViewById(R.id.pb_main_activity).setVisibility(View.GONE);
+
                     // Retrieve the list of people that the current user has active chats with
                     HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
                     if (chatMap != null) { // If the current user has active chats
@@ -199,4 +240,5 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         intent.putExtra("CHAT_PARTNER_EMAIL", chatPreview.getChatPartnerEmail());
         startActivity(intent);
     }
+
 }
