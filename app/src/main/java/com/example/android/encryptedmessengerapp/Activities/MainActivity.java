@@ -15,7 +15,8 @@ import android.view.View;
 import com.example.android.encryptedmessengerapp.Adapters.chatRoomRecyclerViewAdapter;
 import com.example.android.encryptedmessengerapp.Objects.ChatPreview;
 import com.example.android.encryptedmessengerapp.R;
-import com.example.android.encryptedmessengerapp.Utils;
+import com.example.android.encryptedmessengerapp.Utils.MiscUtils;
+import com.example.android.encryptedmessengerapp.Utils.SecurityUtils;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SecurityUtils.testEncryption(MainActivity.this);
 
         initializeToolbar();
         authorizeUser();
@@ -197,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                         activeChatsValueEventListeners = new ArrayList<>();
                         for (int i = 0; i < chatPartners.size(); i++) { // For each chat partner
                             final String chatPartnerID = chatPartners.get(i);
-                            final String chatRoomID = Utils.getChatRoomID(user_id, chatPartnerID); // Get the id of the chat room
+                            final String chatRoomID = MiscUtils.getChatRoomID(user_id, chatPartnerID); // Get the id of the chat room
                             // Get the email of the chat partner
                             firebaseDatabase.child("users").child(chatPartnerID).child("email").addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
@@ -232,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
 
         firebaseDatabase.child("userChats").child(user_id).addValueEventListener(chatPartnersValueEventListener);
     }
+
 
     @Override
     public void onChatInfoClicked(ChatPreview chatPreview) {

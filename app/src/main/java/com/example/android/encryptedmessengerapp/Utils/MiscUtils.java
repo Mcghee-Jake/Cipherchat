@@ -1,6 +1,6 @@
-package com.example.android.encryptedmessengerapp;
+package com.example.android.encryptedmessengerapp.Utils;
 
-public class Utils {
+public class MiscUtils {
 
     /**
      * Create a chatID in the form of  [lowerUserName_higherUserName]

@@ -17,7 +17,7 @@ import android.widget.ImageButton;
 import com.example.android.encryptedmessengerapp.Adapters.MessageAdapter;
 import com.example.android.encryptedmessengerapp.Objects.Message;
 import com.example.android.encryptedmessengerapp.R;
-import com.example.android.encryptedmessengerapp.Utils;
+import com.example.android.encryptedmessengerapp.Utils.MiscUtils;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -189,7 +189,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
                     chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
-                    chatID = Utils.getChatRoomID(username, chatPartnerID);
+                    chatID = MiscUtils.getChatRoomID(username, chatPartnerID);
 
                     firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
                         @Override
