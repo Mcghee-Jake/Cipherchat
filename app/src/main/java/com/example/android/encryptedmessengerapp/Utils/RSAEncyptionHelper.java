@@ -24,13 +24,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
-public class SecurityUtils {
+public class RSAEncyptionHelper {
 
     public static KeyPair generateKeys(Context context, String alias){
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA","AndroidKeyStore");
 
-            if (Build.VERSION.SDK_INT >= 23) { // Device is Marshmallow or greater, initalize with KeyGenParameterSpec
+            if (Build.VERSION.SDK_INT >= 23) { // Device is Marshmallow or greater, initialize with KeyGenParameterSpec
 
                 KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                         .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
@@ -40,9 +40,6 @@ public class SecurityUtils {
                 keyPairGenerator.initialize(keyGenParameterSpec);
 
                 KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-                Log.d("KEY", "Public Key is: " + keyPair.getPublic());
-                Log.d("KEY", "Private Key is: " + keyPair.getPrivate());
 
                 return keyPair;
             } else { // Device is below Marshmallow, initialize with KeyPairGeneratorSpec
@@ -61,9 +58,6 @@ public class SecurityUtils {
                 keyPairGenerator.initialize(keyPairGeneratorSpec);
                 KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-                Log.d("KEY", "Public Key is: " + keyPair.getPublic());
-                Log.d("KEY", "Private Key is: " + keyPair.getPrivate());
-
                 return keyPair;
             }
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
@@ -72,7 +66,7 @@ public class SecurityUtils {
         return null;
     }
 
-    private static Cipher getCipher() {
+    private static Cipher createCipher() {
         String transformation = "RSA/ECB/PKCS1Padding";
         try {
             return Cipher.getInstance(transformation);
@@ -83,7 +77,7 @@ public class SecurityUtils {
     }
 
     public static String encrypt(String data, Key key) {
-        Cipher cipher = getCipher();
+        Cipher cipher = createCipher();
         try {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             byte[] bytes = cipher.doFinal(data.getBytes());
@@ -95,7 +89,7 @@ public class SecurityUtils {
     }
 
     public static String decrypt(String data, Key key) {
-        Cipher cipher = getCipher();
+        Cipher cipher = createCipher();
         try {
             cipher.init(Cipher.DECRYPT_MODE, key);
             byte[] encryptedData = Base64.decode(data, Base64.DEFAULT);
