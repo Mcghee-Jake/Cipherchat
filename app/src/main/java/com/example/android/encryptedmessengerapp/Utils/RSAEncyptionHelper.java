@@ -6,7 +6,6 @@ import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
-import android.util.Log;
 
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
@@ -99,16 +98,5 @@ public class RSAEncyptionHelper {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void testEncryption(Context context) {
-        KeyPair keyPair = generateKeys(context, "TEST");
-
-        String secretMessage = "This is a very secret message";
-        Log.d("ENCRYPTION_TEST", "Plaintext - " + secretMessage);
-        String encryptedMessage = encrypt(secretMessage, keyPair.getPublic());
-        Log.d("ENCRYPTION_TEST", "Encrypted text - " + encryptedMessage);
-        String decryptedMessage = decrypt(encryptedMessage, keyPair.getPrivate());
-        Log.d("ENCRYPTION_TEST", "Decrypted text - " + decryptedMessage);
     }
 }

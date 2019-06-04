@@ -38,7 +38,6 @@ public class AESEncryptionHelper {
 
 
     public static String encrypt(String data, SecretKey secretKey) {
-        byte[] messageBytes = Base64.decode(data, Base64.DEFAULT);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[12];
         secureRandom.nextBytes(iv);
@@ -46,7 +45,7 @@ public class AESEncryptionHelper {
         GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
         try {
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
-            byte[] cipherText = cipher.doFinal(messageBytes);
+            byte[] cipherText = cipher.doFinal(data.getBytes());
             ByteBuffer byteBuffer = ByteBuffer.allocate(4 + iv.length + cipherText.length);
             byteBuffer.putInt(iv.length);
             byteBuffer.put(iv);

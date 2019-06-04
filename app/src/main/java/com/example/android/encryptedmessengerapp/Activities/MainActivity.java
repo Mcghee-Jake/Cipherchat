@@ -15,8 +15,8 @@ import android.view.View;
 import com.example.android.encryptedmessengerapp.Adapters.chatRoomRecyclerViewAdapter;
 import com.example.android.encryptedmessengerapp.Objects.ChatPreview;
 import com.example.android.encryptedmessengerapp.R;
+import com.example.android.encryptedmessengerapp.Utils.AESEncryptionHelper;
 import com.example.android.encryptedmessengerapp.Utils.MiscUtils;
-import com.example.android.encryptedmessengerapp.Utils.RSAEncyptionHelper;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RSAEncyptionHelper.testEncryption(MainActivity.this);
+        AESEncryptionHelper.testEncryption();
 
         initializeToolbar();
         authorizeUser();
