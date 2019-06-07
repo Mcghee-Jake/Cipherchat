@@ -14,8 +14,8 @@ import android.view.View;
 
 import com.example.android.cipherchat.Adapters.chatRoomRecyclerViewAdapter;
 import com.example.android.cipherchat.Objects.ChatPreview;
-import com.example.android.encryptedmessengerapp.R;
 import com.example.android.cipherchat.Utils.MiscUtils;
+import com.example.android.encryptedmessengerapp.R;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         initializeToolbar();
         authorizeUser();
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         switch (id) {
             case R.id.btn_tutorial:
                 // Launch the tutorial activity
-                Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
+                Intent intent = new Intent(MainActivity.this, TutorialMenuActivity.class);
                 startActivity(intent);
                 break;
             case R.id.btn_logout:

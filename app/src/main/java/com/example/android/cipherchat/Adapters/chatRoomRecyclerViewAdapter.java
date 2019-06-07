@@ -16,7 +16,6 @@ import java.util.List;
 public class chatRoomRecyclerViewAdapter extends RecyclerView.Adapter<chatRoomRecyclerViewAdapter.ChatRoomViewHolder> {
 
     private List<ChatPreview> chatPreviews = new ArrayList<>();
-
     private ChatInfoClickListener chatInfoClickListener;
 
     public chatRoomRecyclerViewAdapter(ChatInfoClickListener chatInfoClickListener) {

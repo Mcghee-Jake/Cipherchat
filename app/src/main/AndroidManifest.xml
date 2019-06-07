@@ -23,11 +23,17 @@
                 android:value="com.example.android.cipherchat.Activities.MainActivity" />
         </activity>
         <activity
-            android:name="com.example.android.cipherchat.Activities.TutorialActivity"
+            android:name="com.example.android.cipherchat.Activities.TutorialMenuActivity"
             android:parentActivityName="com.example.android.cipherchat.Activities.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.android.cipherchat.Activities.MainActivity" />
+        </activity>
+        <activity android:name="com.example.android.cipherchat.Activities.TutorialActivity"
+            android:parentActivityName="com.example.android.cipherchat.Activities.TutorialMenuActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.cipherchat.Activities.TutorialMenuActivity" />
         </activity>
     </application>
 

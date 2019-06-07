@@ -6,7 +6,7 @@ public class ChatPreview {
 
     public ChatPreview(String chatPartnerEmail, String lastMessage) {
         this.chatPartnerEmail = chatPartnerEmail;
-        this.lastMessage = lastMessage.substring(0, 48).trim() + "...";
+        this.lastMessage = lastMessage.substring(0, 36).trim() + "...";
     }
 
     public String getChatPartnerEmail() { return chatPartnerEmail; }
