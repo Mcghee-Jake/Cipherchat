@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Utils;
+package com.example.android.cipherchat.Utils;
 
 import android.content.Context;
 import android.os.Build;
@@ -38,9 +38,7 @@ public class RSAEncyptionHelper {
 
                 keyPairGenerator.initialize(keyGenParameterSpec);
 
-                KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-                return keyPair;
+                return keyPairGenerator.generateKeyPair();
             } else { // Device is below Marshmallow, initialize with KeyPairGeneratorSpec
                 Calendar startDate = Calendar.getInstance();
                 Calendar endDate = Calendar.getInstance();
@@ -55,21 +53,10 @@ public class RSAEncyptionHelper {
                         .build();
 
                 keyPairGenerator.initialize(keyPairGeneratorSpec);
-                KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-                return keyPair;
+                return keyPairGenerator.generateKeyPair();
             }
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private static Cipher createCipher() {
-        String transformation = "RSA/ECB/PKCS1Padding";
-        try {
-            return Cipher.getInstance(transformation);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
         }
         return null;
@@ -95,6 +82,16 @@ public class RSAEncyptionHelper {
             byte[] decodedData = cipher.doFinal(encryptedData);
             return new String(decodedData);
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static Cipher createCipher() {
+        String transformation = "RSA/ECB/PKCS1Padding";
+        try {
+            return Cipher.getInstance(transformation);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             e.printStackTrace();
         }
         return null;

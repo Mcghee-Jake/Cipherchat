@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Activities;
+package com.example.android.cipherchat.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,11 +12,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.android.encryptedmessengerapp.Adapters.chatRoomRecyclerViewAdapter;
-import com.example.android.encryptedmessengerapp.Objects.ChatPreview;
+import com.example.android.cipherchat.Adapters.chatRoomRecyclerViewAdapter;
+import com.example.android.cipherchat.Objects.ChatPreview;
 import com.example.android.encryptedmessengerapp.R;
-import com.example.android.encryptedmessengerapp.Utils.AESEncryptionHelper;
-import com.example.android.encryptedmessengerapp.Utils.MiscUtils;
+import com.example.android.cipherchat.Utils.MiscUtils;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -49,14 +48,11 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        AESEncryptionHelper.testEncryption();
-
         initializeToolbar();
         authorizeUser();
         setupRecyclerView();
         setupFloatingActionButton();
     }
-
 
     @Override
     protected void onPause() {
@@ -80,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
             }
             activeChatsValueEventListeners = null;
         }
-
 
         // Clear the recyclerView
         chatRoomRecyclerViewAdapter.clear();
@@ -106,16 +101,26 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.btn_logout) {
-            AuthUI.getInstance()
-                    .signOut(this)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            clearData();
-                        }
-                    });
+        switch (id) {
+            case R.id.btn_tutorial:
+                // Launch the tutorial activity
+                Intent intent = new Intent(MainActivity.this, TutorialActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.btn_logout:
+                // Logout of firebase
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                clearData();
+                            }
+                        });
+                break;
         }
+
+
         return super.onOptionsItemSelected(item);
     }
 

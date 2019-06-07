@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Activities;
+package com.example.android.cipherchat.Activities;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -14,10 +14,10 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
-import com.example.android.encryptedmessengerapp.Adapters.MessageAdapter;
-import com.example.android.encryptedmessengerapp.Objects.Message;
+import com.example.android.cipherchat.Adapters.MessageAdapter;
+import com.example.android.cipherchat.Objects.Message;
 import com.example.android.encryptedmessengerapp.R;
-import com.example.android.encryptedmessengerapp.Utils.MiscUtils;
+import com.example.android.cipherchat.Utils.MiscUtils;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

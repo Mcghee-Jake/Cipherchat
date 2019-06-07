@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Utils;
+package com.example.android.cipherchat.Utils;
 
 import android.util.Base64;
 import android.util.Log;
@@ -19,25 +19,17 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class AESEncryptionHelper {
 
-    public static SecretKey generateKey() {
+    public static String generateKey() {
         SecureRandom secureRandom = new SecureRandom();
         byte[] key = new byte[16];
         secureRandom.nextBytes(key);
-        return new SecretKeySpec(key, "AES");
-    }
-
-    private static Cipher createCipher() {
-        String transformation = "AES/GCM/NoPadding";
-        try {
-            return Cipher.getInstance(transformation);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            e.printStackTrace();
-        }
-        return null;
+        SecretKey secretKey = new SecretKeySpec(key, "AES");
+        return Base64.encodeToString(secretKey.getEncoded(), Base64.DEFAULT);
     }
 
 
-    public static String encrypt(String data, SecretKey secretKey) {
+    public static String encrypt(String data, String secretKeyString) {
+        SecretKey secretKey = convertStringToSecretKey(secretKeyString);
         SecureRandom secureRandom = new SecureRandom();
         byte[] iv = new byte[12];
         secureRandom.nextBytes(iv);
@@ -57,7 +49,8 @@ public class AESEncryptionHelper {
         return null;
     }
 
-    public static String decrypt(String data, SecretKey secretKey) {
+    public static String decrypt(String data, String secretKeyString) {
+        SecretKey secretKey = convertStringToSecretKey(secretKeyString);
         byte[] encryptedData = Base64.decode(data, Base64.DEFAULT);
         ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
         int ivLength = byteBuffer.getInt();
@@ -79,7 +72,7 @@ public class AESEncryptionHelper {
     }
 
     public static void testEncryption() {
-        SecretKey secretKey = generateKey();
+        String secretKey = generateKey();
         String secretMessage = "This is a very secret message";
         Log.d("ENCRYPTION_TEST", "Plaintext - " + secretMessage);
         String encryptedMessage = encrypt(secretMessage, secretKey);
@@ -87,5 +80,21 @@ public class AESEncryptionHelper {
         String decryptedMessage = decrypt(encryptedMessage, secretKey);
         Log.d("ENCRYPTION_TEST", "Decrypted text - " + decryptedMessage);
     }
+
+    private static SecretKey convertStringToSecretKey(String secretKeyString) {
+        byte[] encodedKey = Base64.decode(secretKeyString, Base64.DEFAULT);
+        return new SecretKeySpec(encodedKey, "AES");
+    }
+
+    private static Cipher createCipher() {
+        String transformation = "AES/GCM/NoPadding";
+        try {
+            return Cipher.getInstance(transformation);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

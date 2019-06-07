@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Utils;
+package com.example.android.cipherchat.Utils;
 
 public class MiscUtils {
 

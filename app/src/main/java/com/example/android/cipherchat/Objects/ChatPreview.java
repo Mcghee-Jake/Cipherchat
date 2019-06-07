@@ -1,4 +1,4 @@
-package com.example.android.encryptedmessengerapp.Objects;
+package com.example.android.cipherchat.Objects;
 
 public class ChatPreview {
     private String chatPartnerEmail;
