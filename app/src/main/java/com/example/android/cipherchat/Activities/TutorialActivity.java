@@ -13,7 +13,7 @@ public class TutorialActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tutorial);
 
-        initializeToolbar();
+        //initializeToolbar();
     }
 
     private void initializeToolbar() {
