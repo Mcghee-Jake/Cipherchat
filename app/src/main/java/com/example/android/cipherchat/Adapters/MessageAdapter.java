@@ -18,10 +18,11 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
     private List<Message> messages = new ArrayList<>();
-    private String username;
+    private String user_id;
 
-    public MessageAdapter(String username) {
-        this.username = username;
+
+    public MessageAdapter(String user_id) {
+        this.user_id = user_id;
     }
 
     public void add(Message message){
@@ -29,9 +30,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyDataSetChanged();
     }
 
+
     @Override
     public int getItemViewType(int position) {
-        if (messages.get(position).getSender().equals(username)) return VIEW_TYPE_MESSAGE_SENT;
+        if (messages.get(position).getSender().equals(user_id)) return VIEW_TYPE_MESSAGE_SENT;
         else return VIEW_TYPE_MESSAGE_RECEIVED;
     }
 
@@ -49,10 +51,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
-        String message = messages.get(i).getMessage();
+        String messageString = messages.get(i).decryptMessage(user_id);
 
-        if (viewHolder.getItemViewType() == VIEW_TYPE_MESSAGE_SENT) ((SentMessageViewHolder) viewHolder).message.setText(message);
-        else ((ReceivedMessageViewHolder) viewHolder).message.setText(message);
+        if (viewHolder.getItemViewType() == VIEW_TYPE_MESSAGE_SENT) ((SentMessageViewHolder) viewHolder).message.setText(messageString);
+        else ((ReceivedMessageViewHolder) viewHolder).message.setText(messageString);
 
     }
 

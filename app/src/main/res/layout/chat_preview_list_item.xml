@@ -32,6 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
+                android:textColor="#fff"
                 tools:text="Chat Partner Name"
                 android:layout_marginStart="8dp"
                 app:layout_constraintStart_toEndOf="@id/iv_person"
@@ -41,7 +42,8 @@
                 android:id="@+id/tv_chat_preview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Contents of the last message..."
+                android:textColor="#fff"
+                tools:text="Contents of the last messageString..."
                 app:layout_constraintStart_toStartOf="@+id/tv_chat_partner"
                 app:layout_constraintTop_toBottomOf="@+id/tv_chat_partner"/>
 

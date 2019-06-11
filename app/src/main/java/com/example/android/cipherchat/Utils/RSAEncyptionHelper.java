@@ -7,14 +7,23 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Calendar;
 
 import javax.crypto.BadPaddingException;
@@ -62,10 +71,41 @@ public class RSAEncyptionHelper {
         return null;
     }
 
-    public static String encrypt(String data, Key key) {
+    public static PrivateKey getPrivateKey(String alias) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+
+            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore
+                    .getEntry(alias, null);
+            return privateKeyEntry.getPrivateKey();
+        } catch (KeyStoreException | CertificateException | IOException | NoSuchAlgorithmException | UnrecoverableEntryException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String convertPublicKeyToString(KeyPair keyPair) {
+        byte[] publicKeyBytes = Base64.encode(keyPair.getPublic().getEncoded(),Base64.DEFAULT);
+        return new String(publicKeyBytes);
+    }
+
+    public static PublicKey getPublicKeyFromString(String publicKeyString) {
+        try {
+            byte[] publicBytes = Base64.decode(publicKeyString, Base64.DEFAULT);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            return keyFactory.generatePublic(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String encrypt(String data, PublicKey publicKey) {
         Cipher cipher = createCipher();
         try {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             byte[] bytes = cipher.doFinal(data.getBytes());
             return Base64.encodeToString(bytes, Base64.DEFAULT);
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
@@ -74,10 +114,10 @@ public class RSAEncyptionHelper {
         return null;
     }
 
-    public static String decrypt(String data, Key key) {
+    public static String decrypt(String data, PrivateKey privateKey) {
         Cipher cipher = createCipher();
         try {
-            cipher.init(Cipher.DECRYPT_MODE, key);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] encryptedData = Base64.decode(data, Base64.DEFAULT);
             byte[] decodedData = cipher.doFinal(encryptedData);
             return new String(decodedData);
@@ -96,4 +136,5 @@ public class RSAEncyptionHelper {
         }
         return null;
     }
+
 }

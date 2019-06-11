@@ -30,7 +30,7 @@ public class TutorialMenuAdapter extends RecyclerView.Adapter<TutorialMenuAdapte
     @Override
     public TutorialViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-        View view = inflater.inflate(R.layout.tutorial_list_item, viewGroup, false);
+        View view = inflater.inflate(R.layout.tutorial_menu_item, viewGroup, false);
         return new TutorialViewHolder(view);
     }
 

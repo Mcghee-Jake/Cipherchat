@@ -16,8 +16,10 @@ import android.widget.ImageButton;
 
 import com.example.android.cipherchat.Adapters.MessageAdapter;
 import com.example.android.cipherchat.Objects.Message;
-import com.example.android.encryptedmessengerapp.R;
+import com.example.android.cipherchat.Utils.AESEncryptionHelper;
 import com.example.android.cipherchat.Utils.MiscUtils;
+import com.example.android.cipherchat.Utils.RSAEncyptionHelper;
+import com.example.android.encryptedmessengerapp.R;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,9 +27,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
+
 public class ChatActivity extends AppCompatActivity {
 
-    private String username;
+    private String user_id;
     private String chatID;
     private MessageAdapter messageAdapter;
     private String chatPartnerEmail;
@@ -46,7 +50,7 @@ public class ChatActivity extends AppCompatActivity {
 
         firebaseDatabase = FirebaseDatabase.getInstance().getReference();
 
-        username = getIntent().getStringExtra("USERNAME");
+        user_id = getIntent().getStringExtra("USERNAME");
         chatPartnerEmail = getIntent().getStringExtra("CHAT_PARTNER_EMAIL");
 
         if (chatPartnerEmail == null) startNewChat();// If this is a new conversation
@@ -148,20 +152,54 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String messageString = etMessage.getText().toString().trim();
                 if (!messageString.isEmpty()) { // If there is a valid string in the message field
-                    // Send the message through firebase
-                    Message message = new Message(username, messageString);
-                    firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
-                    firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message.getMessage());
-                    etMessage.setText("");
+                    etMessage.setText(""); // Clear the message field
+
+                    // Encrypt the message with AES
+                    final String keyAES = AESEncryptionHelper.generateKey();
+                    final String encryptedMessage = AESEncryptionHelper.encrypt(messageString, keyAES);
+
+                    // Get the sender's public key
+                    firebaseDatabase.child("users").child(user_id).child("public_key").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            final String senderPublicKey = dataSnapshot.getValue(String.class);
+
+                            // Get the receiver's public key
+                            firebaseDatabase.child("users").child(chatPartnerID).child("public_key").addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    String receiverPublicKey = dataSnapshot.getValue(String.class);
+
+                                    // Encrypt the AES key with the pair of public keys
+                                    String senderEncryptedKey = RSAEncyptionHelper.encrypt(keyAES, RSAEncyptionHelper.getPublicKeyFromString(senderPublicKey));
+                                    String receiverEncryptedKey = RSAEncyptionHelper.encrypt(keyAES, RSAEncyptionHelper.getPublicKeyFromString(receiverPublicKey));
+
+                                    // Put both keys into a HashMap so they can be included with the message
+                                    HashMap<String, String> keyMap = new HashMap<>();
+                                    keyMap.put(user_id, senderEncryptedKey);
+                                    keyMap.put(chatPartnerID, receiverEncryptedKey);
+
+                                    // Send the message through firebase
+                                    Message message = new Message(user_id, encryptedMessage, keyMap);
+                                    firebaseDatabase.child("chatMessages").child(chatID).push().setValue(message);
+                                    firebaseDatabase.child("chatInfo").child(chatID).child("lastMessage").setValue(message);
+                                }
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) { }
+                            });
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) { }
+                    });
 
                     // Add chat partner info to firebase database if this is the first message between the users
-                    firebaseDatabase.child("userChats").child(username).child(chatPartnerID).addListenerForSingleValueEvent(new ValueEventListener() {
+                    firebaseDatabase.child("userChats").child(user_id).child(chatPartnerID).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             if (dataSnapshot.getValue() == null) {
                                 // Add the users to userChats
-                                firebaseDatabase.child("userChats").child(username).child(chatPartnerID).setValue(true);
-                                firebaseDatabase.child("userChats").child(chatPartnerID).child(username).setValue(true);
+                                firebaseDatabase.child("userChats").child(user_id).child(chatPartnerID).setValue(true);
+                                firebaseDatabase.child("userChats").child(chatPartnerID).child(user_id).setValue(true);
                             }
                         }
                         @Override
@@ -177,7 +215,7 @@ public class ChatActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setReverseLayout(true);
         recyclerView.setLayoutManager(layoutManager);
-        messageAdapter = new MessageAdapter(username);
+        messageAdapter = new MessageAdapter(user_id);
         recyclerView.setAdapter(messageAdapter);
     }
 
@@ -189,7 +227,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() != null) {
                     chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
-                    chatID = MiscUtils.getChatRoomID(username, chatPartnerID);
+                    chatID = MiscUtils.getChatRoomID(user_id, chatPartnerID);
 
                     firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
                         @Override
@@ -214,7 +252,6 @@ public class ChatActivity extends AppCompatActivity {
 
 
     }
-
 
 
 }

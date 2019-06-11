@@ -7,13 +7,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.example.android.cipherchat.Adapters.TutorialViewPagerAdapter;
+import com.example.android.cipherchat.Fragments.TutorialFragment;
 import com.example.android.cipherchat.Objects.Tutorial;
 import com.example.android.cipherchat.Utils.TutorialUtils;
 import com.example.android.encryptedmessengerapp.R;
 
 import java.util.List;
 
-public class TutorialActivity extends AppCompatActivity {
+public class TutorialActivity extends AppCompatActivity implements TutorialFragment.FragmentPageNavigator {
+
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +34,7 @@ public class TutorialActivity extends AppCompatActivity {
 
     private void initializeViewPager() {
         final List<Tutorial> tutorials = TutorialUtils.getTutorials();
-        ViewPager viewPager = findViewById(R.id.vp_tutorial);
+        viewPager = findViewById(R.id.vp_tutorial);
         PagerAdapter pagerAdapter = new TutorialViewPagerAdapter(getSupportFragmentManager(), tutorials);
         viewPager.setAdapter(pagerAdapter);
         final int position = getIntent().getIntExtra("POSITION", 0);
@@ -47,5 +50,10 @@ public class TutorialActivity extends AppCompatActivity {
             @Override
             public void onPageScrollStateChanged(int i) { }
         });
+    }
+
+    @Override
+    public void changePage(int position) {
+        viewPager.setCurrentItem(position);
     }
 }

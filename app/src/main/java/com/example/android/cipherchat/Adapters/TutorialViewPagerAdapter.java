@@ -24,6 +24,8 @@ public class TutorialViewPagerAdapter extends FragmentStatePagerAdapter {
         TutorialFragment tutorialFragment = new TutorialFragment();
         Bundle args = new Bundle();
         args.putString("CONTENTS", tutorialList.get(i).getTutorialContents());
+        args.putInt("POSITION", i);
+        args.putInt("TUTORIAL_COUNT", tutorialList.size());
         tutorialFragment.setArguments(args);
         return tutorialFragment;
     }

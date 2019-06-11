@@ -8,13 +8,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.example.android.cipherchat.Adapters.chatRoomRecyclerViewAdapter;
 import com.example.android.cipherchat.Objects.ChatPreview;
+import com.example.android.cipherchat.Objects.Message;
 import com.example.android.cipherchat.Utils.MiscUtils;
+import com.example.android.cipherchat.Utils.RSAEncyptionHelper;
 import com.example.android.encryptedmessengerapp.R;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -27,6 +30,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         authorizeUser();
         setupRecyclerView();
         setupFloatingActionButton();
+        //testEncryption();
     }
 
     @Override
@@ -109,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                 startActivity(intent);
                 break;
             case R.id.btn_logout:
+                clearData();
                 // Logout of firebase
                 AuthUI.getInstance()
                         .signOut(this)
@@ -161,8 +169,12 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue() == null) {
+                    KeyPair keyPair = RSAEncyptionHelper.generateKeys(MainActivity.this, user_id);
+                    String publicKeyString = RSAEncyptionHelper.convertPublicKeyToString(keyPair);
+
                     firebaseDatabase.child("users").child(user_id).child("user_id").setValue(user_id);
                     firebaseDatabase.child("users").child(user_id).child("email").setValue(user.getEmail());
+                    firebaseDatabase.child("users").child(user_id).child("public_key").setValue(publicKeyString);
                 }
             }
             @Override
@@ -176,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         recyclerView.setLayoutManager(layoutManager);
         chatRoomRecyclerViewAdapter = new chatRoomRecyclerViewAdapter(this);
         recyclerView.setAdapter(chatRoomRecyclerViewAdapter);
+        chatRoomRecyclerViewAdapter.clear();
     }
 
     private void setupFloatingActionButton() {
@@ -215,9 +228,12 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                                     ValueEventListener valueEventListener = new ValueEventListener() {
                                         @Override
                                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            String lastMessage = dataSnapshot.getValue(String.class); // Retrieve the last message in the conversation
-                                            ChatPreview chatPreview = new ChatPreview(chatPartnerEmail, lastMessage);
-                                            chatRoomRecyclerViewAdapter.update(chatPreview); // Display the chat info in the recyclerView
+                                            Message encryptedMessage = dataSnapshot.getValue(Message.class); // Retrieve the last message in the conversation
+                                            if (encryptedMessage != null) {
+                                                String decryptedMessage =  encryptedMessage.decryptMessage(user_id); // Decrypt the message
+                                                ChatPreview chatPreview = new ChatPreview(chatPartnerEmail, decryptedMessage);
+                                                chatRoomRecyclerViewAdapter.update(chatPreview); // Display the chat info in the recyclerView
+                                            }
                                         }
                                         @Override
                                         public void onCancelled(@NonNull DatabaseError databaseError) { }
@@ -242,9 +258,35 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         firebaseDatabase.child("userChats").child(user_id).addValueEventListener(chatPartnersValueEventListener);
     }
 
+    private void testEncryption() {
+
+        FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getUid()).child("public_key").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String publicKeyString = dataSnapshot.getValue(String.class);
+                PublicKey publicKey = RSAEncyptionHelper.getPublicKeyFromString(publicKeyString);
+                PrivateKey privateKey = RSAEncyptionHelper.getPrivateKey(user_id);
+
+                String secretMessage = "This is soooo secret!";
+                Log.d("XYZ", "Secret Message - " + secretMessage);
+                String encryptedMessage = RSAEncyptionHelper.encrypt(secretMessage, publicKey);
+                Log.d("XYZ", "Encrypted Message - " + encryptedMessage);
+                String decryptedMessage = RSAEncyptionHelper.decrypt(encryptedMessage, privateKey);
+                Log.d("XYZ", "Decrypted Message - " + decryptedMessage);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
     @Override
     public void onChatInfoClicked(ChatPreview chatPreview) {
+        Log.d("XYZ", "user id 2 -" + user_id);
+
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
         intent.putExtra("USERNAME", user_id);
         intent.putExtra("CHAT_PARTNER_EMAIL", chatPreview.getChatPartnerEmail());

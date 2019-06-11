@@ -42,7 +42,7 @@ public class AESEncryptionHelper {
             byteBuffer.putInt(iv.length);
             byteBuffer.put(iv);
             byteBuffer.put(cipherText);
-            return Base64.encodeToString(byteBuffer.array(), Base64.DEFAULT);
+            return Base64.encodeToString(byteBuffer.array(), Base64.DEFAULT).trim();
         } catch (InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
         }
