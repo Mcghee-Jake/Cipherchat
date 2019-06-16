@@ -21,13 +21,14 @@ import com.example.android.cipherchat.Utils.AESEncryptionHelper;
 import com.example.android.cipherchat.Utils.MiscUtils;
 import com.example.android.cipherchat.Utils.RSAEncyptionHelper;
 import com.example.android.encryptedmessengerapp.R;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ChatActivity extends AppCompatActivity {
@@ -231,25 +232,23 @@ public class ChatActivity extends AppCompatActivity {
                     chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
                     chatID = MiscUtils.getChatRoomID(user_id, chatPartnerID);
 
-                    firebaseDatabase.child("chatMessages").child(chatID).addValueEventListener(new ValueEventListener() {
+                    firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
                         @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            ArrayList<Message> encryptedMessages = new ArrayList<>();
-                            for (DataSnapshot dsp : dataSnapshot.getChildren()) {
-                                encryptedMessages.add(dsp.getValue(Message.class));
-                            }
-                            ArrayList<Message> decryptedMessages = new ArrayList<>();
-                            for (Message message : encryptedMessages) {
-                                decryptedMessages.add(message.decryptMessage(user_id));
-                            }
-                            messageAdapter.update(encryptedMessages, decryptedMessages);
+                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                             hideProgressBar();
+                            Message encryptedMessage = dataSnapshot.getValue(Message.class);
+                            messageAdapter.addEncryptedMessage(encryptedMessage);
+                            Message decryptedMessage = encryptedMessage.decryptMessage(user_id);
+                            messageAdapter.addDecryptedMessage(decryptedMessage);
                         }
-
                         @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                        }
+                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {}
                     });
 
                 }
