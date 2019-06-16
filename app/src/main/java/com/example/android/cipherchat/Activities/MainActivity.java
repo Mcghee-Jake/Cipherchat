@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                             Message encryptedMessage = dataSnapshot.getValue(Message.class); // Retrieve the last message in the conversation
                                             if (encryptedMessage != null) {
-                                                String decryptedMessage =  encryptedMessage.decryptMessage(user_id); // Decrypt the message
+                                                String decryptedMessage =  encryptedMessage.decryptMessage(user_id).getMessageString(); // Decrypt the message
                                                 ChatPreview chatPreview = new ChatPreview(chatPartnerEmail, decryptedMessage);
                                                 chatRoomRecyclerViewAdapter.update(chatPreview); // Display the chat info in the recyclerView
                                             }

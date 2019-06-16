@@ -20,12 +20,12 @@ public class Message {
         this.keys = keys;
     }
 
-    public String decryptMessage(String user_id) {
+    public Message decryptMessage(String user_id) {
         PrivateKey privateKey = RSAEncyptionHelper.getPrivateKey(user_id);
         String encryptedAESkey = keys.get(user_id);
         String decryptedAESKey = RSAEncyptionHelper.decrypt(encryptedAESkey, privateKey);
         String decryptedMessage = AESEncryptionHelper.decrypt(messageString, decryptedAESKey);
-        return decryptedMessage;
+        return new Message(sender, decryptedMessage, keys);
     }
 
     public String getMessageString() {

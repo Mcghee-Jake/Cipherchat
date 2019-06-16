@@ -17,24 +17,47 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int VIEW_TYPE_MESSAGE_SENT = 1;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
-    private List<Message> messages = new ArrayList<>();
+    private List<Message> encryptedMessages, decryptedMessages;
     private String user_id;
+    private boolean showDecrypted;
 
 
     public MessageAdapter(String user_id) {
         this.user_id = user_id;
+        encryptedMessages = new ArrayList<>();
+        decryptedMessages = new ArrayList<>();
+        showDecrypted = true;
     }
 
-    public void add(Message message){
-        messages.add(0, message);
+    public void addEncryptedMessage(Message message) {
+        encryptedMessages.add(0, message);
+        notifyDataSetChanged();
+    }
+
+    public void addDecryptedMessage(Message message) {
+        decryptedMessages.add(0, message);
+        notifyDataSetChanged();
+    }
+
+    public void toggleDecryption() {
+        showDecrypted = !showDecrypted;
         notifyDataSetChanged();
     }
 
 
     @Override
     public int getItemViewType(int position) {
-        if (messages.get(position).getSender().equals(user_id)) return VIEW_TYPE_MESSAGE_SENT;
+        List<Message> messages;
+        if (showDecrypted) messages = decryptedMessages;
+        else messages = encryptedMessages;
+
+        if (messageWasSentByUser(messages, position)) return VIEW_TYPE_MESSAGE_SENT;
         else return VIEW_TYPE_MESSAGE_RECEIVED;
+    }
+
+    private boolean messageWasSentByUser(List<Message> messages, int position) {
+        if (messages.get(position).getSender().equals(user_id)) return true;
+        else return false;
     }
 
     @NonNull
@@ -51,7 +74,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
-        String messageString = messages.get(i).decryptMessage(user_id);
+        String messageString;
+        if (showDecrypted) messageString = decryptedMessages.get(i).getMessageString();
+        else messageString = encryptedMessages.get(i).getMessageString();
 
         if (viewHolder.getItemViewType() == VIEW_TYPE_MESSAGE_SENT) ((SentMessageViewHolder) viewHolder).message.setText(messageString);
         else ((ReceivedMessageViewHolder) viewHolder).message.setText(messageString);
@@ -60,7 +85,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemCount() {
-        return messages.size();
+        return encryptedMessages.size();
     }
 
     public class SentMessageViewHolder extends RecyclerView.ViewHolder {

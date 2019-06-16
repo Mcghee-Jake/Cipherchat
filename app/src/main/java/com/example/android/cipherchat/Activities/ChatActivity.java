@@ -10,6 +10,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -232,8 +234,10 @@ public class ChatActivity extends AppCompatActivity {
                     firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
                         @Override
                         public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                            Message message = dataSnapshot.getValue(Message.class);
-                            messageAdapter.add(message);
+                            Message encryptedMessage = dataSnapshot.getValue(Message.class);
+                            messageAdapter.addEncryptedMessage(encryptedMessage);
+                            Message decryptedMessage = encryptedMessage.decryptMessage(user_id);
+                            messageAdapter.addDecryptedMessage(decryptedMessage);
                         }
                         @Override
                         public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
@@ -254,4 +258,15 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_chat_activity, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.btn_toggle_decryption) messageAdapter.toggleDecryption();
+        return super.onOptionsItemSelected(item);
+    }
 }
