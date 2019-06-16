@@ -2,7 +2,6 @@ package com.example.android.cipherchat.Activities;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -22,13 +21,13 @@ import com.example.android.cipherchat.Utils.AESEncryptionHelper;
 import com.example.android.cipherchat.Utils.MiscUtils;
 import com.example.android.cipherchat.Utils.RSAEncyptionHelper;
 import com.example.android.encryptedmessengerapp.R;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ChatActivity extends AppCompatActivity {
@@ -60,6 +59,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void startNewChat() {
+        //hideProgressBar();
         newChatActionBar();
         hideMessaging();
     }
@@ -231,32 +231,39 @@ public class ChatActivity extends AppCompatActivity {
                     chatPartnerID = dataSnapshot.getChildren().iterator().next().getKey();
                     chatID = MiscUtils.getChatRoomID(user_id, chatPartnerID);
 
-                    firebaseDatabase.child("chatMessages").child(chatID).addChildEventListener(new ChildEventListener() {
+                    firebaseDatabase.child("chatMessages").child(chatID).addValueEventListener(new ValueEventListener() {
                         @Override
-                        public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                            Message encryptedMessage = dataSnapshot.getValue(Message.class);
-                            messageAdapter.addEncryptedMessage(encryptedMessage);
-                            Message decryptedMessage = encryptedMessage.decryptMessage(user_id);
-                            messageAdapter.addDecryptedMessage(decryptedMessage);
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            ArrayList<Message> encryptedMessages = new ArrayList<>();
+                            for (DataSnapshot dsp : dataSnapshot.getChildren()) {
+                                encryptedMessages.add(dsp.getValue(Message.class));
+                            }
+                            ArrayList<Message> decryptedMessages = new ArrayList<>();
+                            for (Message message : encryptedMessages) {
+                                decryptedMessages.add(message.decryptMessage(user_id));
+                            }
+                            messageAdapter.update(encryptedMessages, decryptedMessages);
+                            hideProgressBar();
                         }
+
                         @Override
-                        public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
-                        @Override
-                        public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {}
-                        @Override
-                        public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {}
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {}
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
                     });
+
                 }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
 
-
     }
 
+
+    private void hideProgressBar(){
+        findViewById(R.id.pb_chat_activity).setVisibility(View.GONE);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

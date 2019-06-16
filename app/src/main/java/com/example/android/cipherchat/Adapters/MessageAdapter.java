@@ -44,6 +44,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         notifyDataSetChanged();
     }
 
+    public void update(List<Message> encryptedMessages, List<Message> decryptedMessages) {
+        this.encryptedMessages = encryptedMessages;
+        this.decryptedMessages = decryptedMessages;
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public int getItemViewType(int position) {
