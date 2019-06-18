@@ -28,6 +28,7 @@ public class chatRoomRecyclerViewAdapter extends RecyclerView.Adapter<chatRoomRe
 
     public void clear() {
         this.chatPreviews = new ArrayList<>();
+        notifyDataSetChanged();
     }
 
     public void update(ChatPreview chatPreview) {

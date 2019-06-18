@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
         authorizeUser();
         setupRecyclerView();
         setupFloatingActionButton();
-        //testEncryption();
     }
 
     @Override
@@ -116,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                 startActivity(intent);
                 break;
             case R.id.btn_logout:
-                clearData();
                 // Logout of firebase
                 AuthUI.getInstance()
                         .signOut(this)
@@ -159,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                                     .build(),
                             RC_SIGN_IN);
                 }
+                chatRoomRecyclerViewAdapter.clear();
             }
         };
     }
@@ -212,9 +211,14 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                     // Hide the progress bar
                     findViewById(R.id.pb_main_activity).setVisibility(View.GONE);
 
+                    // Clear the recyclerView
+                    chatRoomRecyclerViewAdapter.clear();
+
                     // Retrieve the list of people that the current user has active chats with
                     HashMap<String, Boolean> chatMap = (HashMap<String, Boolean>) dataSnapshot.getValue();
                     if (chatMap != null) { // If the current user has active chats
+                        findViewById(R.id.tv_chat_room_empty_state).setVisibility(View.GONE);
+
                         final List<String> chatPartners = new ArrayList<>(chatMap.keySet());
                         activeChatsValueEventListeners = new ArrayList<>();
                         for (int i = 0; i < chatPartners.size(); i++) { // For each chat partner
@@ -246,6 +250,8 @@ public class MainActivity extends AppCompatActivity implements chatRoomRecyclerV
                             });
 
                         }
+                    } else { // User does not have any active chats
+                        findViewById(R.id.tv_chat_room_empty_state).setVisibility(View.VISIBLE);
                     }
 
                 }

@@ -60,7 +60,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void startNewChat() {
-        //hideProgressBar();
+        hideProgressBar();
         newChatActionBar();
         hideMessaging();
     }
@@ -98,7 +98,7 @@ public class ChatActivity extends AppCompatActivity {
                             builder.setMessage("No user found with this e-mail address")
                                     .setCancelable(true)
                                     .setTitle("Error")
-                                    .setNeutralButton("OK", null);
+                                    .setPositiveButton("OK", null);
                             AlertDialog alert = builder.create();
                             alert.show();
                         }

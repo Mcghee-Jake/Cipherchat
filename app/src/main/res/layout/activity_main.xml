@@ -17,10 +17,28 @@
             android:background="@color/colorPrimary"
             android:elevation="8dp"/>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_conversations"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_conversations"
+                android:layout_height="match_parent"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:id="@+id/tv_chat_room_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="No active conversations"
+                android:visibility="gone"/>
+
+
+        </FrameLayout>
+
+
 
     </LinearLayout>
 
